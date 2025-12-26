@@ -1,102 +1,64 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+"use client";
+import React, { useEffect, useRef, useState } from "react";
+import { useSocket } from "../context/Socketprovider";
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
+export default function Page() {
+  const { sendMessage, messages } = useSocket();
+  const [message, setMessage] = useState("");
+  const messagesRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
 
   return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+    <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-[#071025]">
+      <div className="w-full max-w-md h-[90vh] max-h-[640px] bg-white dark:bg-[#071126] rounded-2xl shadow-lg flex flex-col overflow-hidden">
+        <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold">Scalable Chat</div>
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+        <div ref={messagesRef} className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-white to-gray-50 dark:from-transparent">
+          <ul className="flex flex-col gap-3">
+            {messages.map((msg, i) => (
+              <li
+                key={i}
+                className={
+                  i % 2 === 0
+                    ? "self-start bg-gray-100 text-gray-900 px-4 py-2 rounded-2xl shadow-sm max-w-[75%] break-words"
+                    : "self-end bg-gradient-to-r from-cyan-200 to-blue-200 text-slate-900 px-4 py-2 rounded-2xl shadow-sm max-w-[75%] break-words"
+                }
+              >
+                {msg}
+              </li>
+            ))}
+          </ul>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+
+        <div className="p-4 bg-white dark:bg-[#071126] flex gap-3 items-center border-t border-gray-100 dark:border-gray-800">
+          <input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="flex-1 h-11 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white dark:bg-transparent text-black dark:text-white placeholder-gray-400"
+            placeholder="Message..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                if (message.trim()) sendMessage(message.trim());
+                setMessage("");
+              }
+            }}
           />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
-      </footer>
+          <button
+            onClick={() => {
+              if (message.trim()) sendMessage(message.trim());
+              setMessage("");
+            }}
+            className="h-11 min-w-[64px] px-4 rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-500 text-white font-semibold shadow-md"
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
